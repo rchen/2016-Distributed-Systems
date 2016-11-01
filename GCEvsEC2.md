@@ -1,5 +1,5 @@
 #Amazon EC2 vs Google Compute Engine
-ref <https://cloud.google.com/docs/compare/aws/networking>
+ref <https://cloud.google.com/docs/compare/aws/>
 
 ##Virtual Machine
 ###Machine access
@@ -8,6 +8,8 @@ ref <https://cloud.google.com/docs/compare/aws/networking>
 
 ###Instance types
 *	GCE can  create a machine type customized to your needs.
+
+
 ![Alt text](https://cloud.google.com/images/products/artwork/tailor.png)
 
 ###Automatic instance scaling
