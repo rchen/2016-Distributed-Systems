@@ -10,7 +10,8 @@ fi
 
 for (( i=1; i<=$days; i++ ))
 do
-   DATE=$(date -v -"$i"d +"%Y%m%d")
+   #DATE=$(date -v -"$i"d +"%Y%m%d") # for macOS
+   DATE=$(date -d "-$i"d +"%Y%m%d") # for Linux
    curl -O --silent -J http://data.gdeltproject.org/events/"$DATE".export.CSV.zip
    unzip "$DATE".export.CSV.zip
 done
