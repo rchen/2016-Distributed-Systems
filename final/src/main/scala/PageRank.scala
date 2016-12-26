@@ -12,12 +12,13 @@ import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.LongWritable
 
 object PageRank {
-  def convertToTuple(record: JsonObject) : (String, String) = {
+  def convertToTuple(record: JsonObject) : (String, String, String) = {
     //val sqldate = record.get("SQLDATE").getAsString
+    val year = record.get("Year").getAsString
     val country1 = record.get("Actor1CountryCode").getAsString
     val country2 = record.get("Actor2CountryCode").getAsString
     //val event = record.get("EventRootCode").getAsString
-    return (country1, country2)
+    return (year,country1, country2)
   }
   
   def convertToJson(pair: (String, Double)) : JsonObject = {
@@ -91,14 +92,16 @@ object PageRank {
     // Display 10 results.
     //wordCounts.take(10).foreach(l => println(l))
     val b = tableData.map(entry => convertToTuple(entry._2))
-    
-    val ranksByUsername = pageRank(b)
-    ranksByUsername.sortBy( x => x._2).collect().foreach(println)
+    val c = b.filter(x => x._1 == "2015").map(x => (x._2, x._3)) 
+    val ranksByUsername1 = pageRank(c)
+    val d = b.filter(x => x._1 == "2016").map(x => (x._2, x._3)) 
+    val ranksByUsername2 = pageRank(d)
+    //ranksByUsername.sortBy( x => x._2).collect().foreach(println)
     
     // BigQueryOutputFormat discards keys, so set key to null.
-    (ranksByUsername
+    /*(ranksByUsername1
     .map(pair => (null, convertToJson(pair)))
-    .saveAsNewAPIHadoopDataset(conf))
+    .saveAsNewAPIHadoopDataset(conf))*/
     
     val inputTmpDirPath = new Path(inputTmpDir)
     inputTmpDirPath.getFileSystem(conf).delete(inputTmpDirPath, true)
