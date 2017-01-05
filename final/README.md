@@ -5,7 +5,7 @@
   		SQLDATE,Year,
   		Actor1CountryCode,
   		Actor2CountryCode,
-  		EventRootCode
+  		EventRootCode //EventCode
 	FROM [gdelt-bq:full.events]
 	WHERE
   		Year >= 2015
