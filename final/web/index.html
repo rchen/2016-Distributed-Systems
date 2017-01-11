@@ -1,0 +1,70 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DS_Final</title>
+<style type="text/css">
+.tftable {font-size:12px;color:#333333;width:100%;border-width: 1px;border-color: #729ea5;border-collapse: collapse;}
+.tftable th {font-size:12px;background-color:#acc8cc;border-width: 1px;padding: 8px;border-style: solid;border-color: #729ea5;text-align:left;}
+.tftable tr {background-color:#d4e3e5;}
+.tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #729ea5;}
+.tftable tr:hover {background-color:#ffffff;}
+.tftable2 {font-size:12px;color:#333333;width:100%;border-width: 1px;border-color: #ebab3a;border-collapse: collapse;}
+.tftable2 th {font-size:12px;background-color:#e6983b;border-width: 1px;padding: 8px;border-style: solid;border-color: #ebab3a;text-align:left;}
+.tftable2 tr {background-color:#f0c169;}
+.tftable2 td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #ebab3a;}
+.tftable2 tr:hover {background-color:#ffffff;}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+var eventdict = {};
+function getreport(jobid) {
+  $.post( "get_report.php", { jid: jobid})
+    .done(function( data ) {
+      var htmlstr='<h3>Event:'+eventdict[jobid.split('_')[0]]+'</h3>'+data;
+      $('#report').html(htmlstr);
+  });
+}
+
+function startRefresh() {
+    setTimeout(startRefresh,2000);
+    $.get('getjobs.php', function(data) {
+        $('#jobs').html(data);
+        $("a").attr("target","_blank");
+    });
+}
+$( function() {
+  $.get('http://gdeltproject.org/data/lookups/CAMEO.eventcodes.txt', function(data) {
+     var cnt = "";
+     var i = 0;
+     var allTextLines = data.split(/\r\n|\n/);
+     allTextLines.forEach(function(value) {
+       if(i>0){
+         var events = value.split('\t');
+         cnt = cnt + '<option value="' + events[0] + '">' + events[0] + ':' + events[1]+ '</option>'
+         eventdict[events[0]]=events[1];
+       }else{
+         cnt = cnt + '<option value="-------">select EventCode</option>'
+       }
+       i = i + 1;
+		 });
+     $( "#event" ).html(cnt);
+  }, 'text');
+  startRefresh();
+});
+</script>
+</head>
+
+<body>
+<h2>Distributed Systems Final Project</h2>
+<form class="" action="exec.php" method="post">
+  <div>
+    <select name="event" id="event">
+    </select>
+     <input type="submit" name="SB" value="送出執行">
+  </div>
+</form>
+<div id="jobs" style="width:60%"></div>
+<div id="report" style="width:80%"></div>
+</body>
+</html>
+
