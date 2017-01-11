@@ -1,6 +1,6 @@
 name := "DsFinal Project"
  
-version := "1.5"
+version := "1.8"
  
 scalaVersion := "2.11.8"
  

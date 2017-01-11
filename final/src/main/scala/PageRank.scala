@@ -12,20 +12,27 @@ import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.LongWritable
 
 object PageRank {
-  def convertToTuple(record: JsonObject) : (String, String) = {
+  def convertToTuple(record: JsonObject) : (String, String, String) = {
     //val sqldate = record.get("SQLDATE").getAsString
+    val year = record.get("Year").getAsString
     val country1 = record.get("Actor1CountryCode").getAsString
     val country2 = record.get("Actor2CountryCode").getAsString
     //val event = record.get("EventRootCode").getAsString
-    return (country1, country2)
+    return (year,country1, country2)
   }
   
-  def convertToJson(pair: (String, Double)) : JsonObject = {
+  def convertToJson(pair: (String, Double, Long, Double, Long )) : JsonObject = {
     val country = pair._1
-    val rank = pair._2
+    val pagerank2016 = pair._2
+    val ranking2016 = pair._3
+    val pagerank2015 = pair._4
+    val ranking2015 = pair._5
     val jsonObject = new JsonObject()
     jsonObject.addProperty("country", country)
-    jsonObject.addProperty("rank", rank)
+    jsonObject.addProperty("pagerank2016", pagerank2016)
+    jsonObject.addProperty("ranking2016", ranking2016)
+    jsonObject.addProperty("pagerank2015", pagerank2015)
+    jsonObject.addProperty("ranking2015", ranking2015)
     return jsonObject
   }
   
@@ -37,8 +44,8 @@ object PageRank {
     val g = Graph(d,e)
     val ranks = g.pageRank(0.0001).vertices
     val ranksByUsername = d.join(ranks).map {case (id, (username, rank)) => (username, rank)}
-    ranksByUsername.sortBy( x => x._2).collect().foreach(println)
-    return ranksByUsername;
+    //ranksByUsername.sortBy( x => x._2).collect().foreach(println)
+    return ranksByUsername.sortBy( x => x._2, false);
   }
   
   def main(args: Array[String]) {
@@ -57,7 +64,7 @@ object PageRank {
     val outputDatasetId = datasetarg
     val outputTableId = oututtable
     val outputTableSchema =
-       "[{'name': 'country', 'type': 'STRING'}, {'name': 'rank', 'type': 'FLOAT'}]"
+       "[{'name': 'country', 'type': 'STRING'}, {'name': 'pagerank2016', 'type': 'FLOAT'}, {'name': 'ranking2016', 'type': 'INTEGER'}, {'name': 'pagerank2015', 'type': 'FLOAT'}, {'name': 'ranking2015', 'type': 'INTEGER'}]"
 
     // Use the Google Cloud Storage bucket for temporary BigQuery export data used
     // by the InputFormat. This assumes the Google Cloud Storage connector for
@@ -91,12 +98,21 @@ object PageRank {
     // Display 10 results.
     //wordCounts.take(10).foreach(l => println(l))
     val b = tableData.map(entry => convertToTuple(entry._2))
+    val c = b.filter(x => x._1 == "2015").map(x => (x._2, x._3)) 
+    val ranksByUsername1 = pageRank(c)
+    val data1 = ranksByUsername1.zipWithIndex.map(x => (x._1._1 , ("2015", x._1._2 , x._2)))
+    //data1.collect().foreach(println)
+    val d = b.filter(x => x._1 == "2016").map(x => (x._2, x._3)) 
+    val ranksByUsername2 = pageRank(d)
+    val data2 = ranksByUsername2.zipWithIndex.map(x => (x._1._1 , ("2016", x._1._2 , x._2)))
+    //data2.collect().foreach(println)
+    //data2.join(data1).map(x => (x._1, x._2._1._1, x._2._1._2, x._2._1._3, x._2._2._1, x._2._2._2, x._2._2._3)).collect().foreach(println)
     
-    val ranksByUsername = pageRank(b)
-    ranksByUsername.sortBy( x => x._2).collect().foreach(println)
+    //ranksByUsername.sortBy( x => x._2).collect().foreach(println)
     
     // BigQueryOutputFormat discards keys, so set key to null.
-    (ranksByUsername
+    val output = data2.join(data1).map(x => (x._1, x._2._1._2, x._2._1._3, x._2._2._2, x._2._2._3))
+    (output
     .map(pair => (null, convertToJson(pair)))
     .saveAsNewAPIHadoopDataset(conf))
     
